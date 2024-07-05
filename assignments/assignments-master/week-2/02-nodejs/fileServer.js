@@ -14,8 +14,47 @@
  */
 const express = require('express');
 const fs = require('fs');
-const path = require('path');
 const app = express();
 
 
+// reading files from the folder
+const path = require('path');
+
+const readAllFiles = ()=>{
+  const directoryPath = path.join(__dirname,'./files');
+  return new Promise((resolve,reject)=>{
+    fs.readdir(directoryPath,(err,files)=>{
+      if(err){
+        reject();
+      }
+      resolve(files);
+    })
+  })
+}
+
+app.get("/files",(req,res)=>{
+  // read the files from the folder
+  readAllFiles().then((response)=>{
+    console.log(response);
+    res.send(response);
+  })
+  .catch((err)=>{
+    console.err("Unable to read file");
+  })
+
+  // return the list
+})
+
+app.get("/file/:filename",(req,res)=>{
+  console.log(req.params.filename);
+
+  fs.readFile(`./files/${req.params.filename}`,"utf-8",(err,data)=>{
+    if(err){
+      res.status(404).send(`${req.params.filename} not found`);
+    }
+    res.json(data);
+  })  
+})
+
+app.listen(3000)
 module.exports = app;
