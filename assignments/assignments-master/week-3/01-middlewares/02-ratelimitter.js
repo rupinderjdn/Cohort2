@@ -16,11 +16,21 @@ setInterval(() => {
     numberOfRequestsForUser = {};
 }, 1000)
 
-app.get('/user', function(req, res) {
+const rateLimiter = (req,res,next)=>{
+  const userId = req.headers["user-id"];
+  let requestNumber = numberOfRequestsForUser[userId] || 0;
+  console.log(requestNumber);
+  if(requestNumber == 5)res.status(404).json({});
+  else{
+    numberOfRequestsForUser[userId] = requestNumber+1;
+    next();
+  }
+}
+app.get('/user',rateLimiter, function(req, res) {
   res.status(200).json({ name: 'john' });
 });
 
-app.post('/user', function(req, res) {
+app.post('/user',rateLimiter, function(req, res) {
   res.status(200).json({ msg: 'created dummy user' });
 });
 
