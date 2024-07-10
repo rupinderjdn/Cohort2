@@ -37,8 +37,11 @@ const kidneyMiddleware = (req,res,next)=>{
     }
     else next();
 }
+app.use(express.json()); // a way to add a middleware. It will get called before every request for the below routes not the above ones
 
 app.get("/health-checkup",userMiddleware,kidneyMiddleware,(req,res)=>{
+    const body = JSON.parse(req.body);
+    console.log(body.kidneyIds.length);
     res.send("YOur heart is healthy");
 })
 
@@ -52,9 +55,42 @@ app.get("/heart-check",userMiddleware,(req,res)=>{
 
 // Last Thing in middleware app.use => only way to catch the body sent in the request
 
-app.use(express.json()); // a way to add a middleware. It will get called before every request for the below routes not the above ones
 // reason
 app.use(userMiddleware) // this needs to do a next() call in order to move to the next function.
 
+// ---------------------------------- GLOBAL CATCH----------------------------------
+// Whenever there is an exception the control will reach here, and we can send a cleaner message
+app.use((err,req,res,next)=>{
+    console.log(err);
+    res.status(500).json({
+        msg: "Sorry something is up with our server"
+    })
+})
+
+// ------------------- ZOD -----------------------
+const zod = require("zod");
+
+// creating a schema for strings
+const mySchema = zod.string();
+const arraySchema = zod.array(zod.number())
+
+const objectSchema = zod.object({
+    email: zod.string().email(),
+    password: zod.string().min(8),
+    country: zod.literal("IN").or(zod.literal("US")),
+    kidneys: zod.array(zod.number())
+})
+
+
+app.post("/test-zod",function(req,res){
+    const kidneys = req.body.kidneys;
+    const response = arraySchema.safeParse(kidneys);
+
+    const object = req.body.object;
+    const objectResponse = objectSchema.safeParse(object);
+
+    console.log(response,objectResponse);
+    res.send({response,objectResponse})
+})
 
 app.listen(3000);
