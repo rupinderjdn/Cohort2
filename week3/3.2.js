@@ -53,6 +53,7 @@ const ALL_USERS = [
 
 function userExists(username,password){
   // verifying if the user exists or not
+  // find can also be used which takes a callback function as an argument
   let result =false;
   ALL_USERS.forEach((userEntry)=>{
     // console.log(username,password);
@@ -61,6 +62,7 @@ function userExists(username,password){
       result = true;
     }
   })
+
   return result;
 }
 
@@ -88,6 +90,11 @@ app.get("/users",(req,res)=>{
   try{
     const decoded = jwt.verify(token, jwtPassword);
     const username = decoded.username;
+    // return a lsit of users
+    const userNames = ALL_USERS.map((user)=>{
+      return user.username;
+    })
+    res.status(200).json(userNames);
   }
   catch(err){
     return res.status(403).json({
